@@ -6,7 +6,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-agent.sh"
+          "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/pre-agent.js"
         }
       ]
     }
@@ -17,7 +17,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/post-agent.sh"
+          "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/post-agent.js"
         }
       ]
     }
