@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "bullpen",
-      "source": ".",
+      "source": "./",
       "description": "Your AI engineering team — 64 named specialists, self-learning via Pinecone, with cinematic terminal UX and a built-in wellness coach.",
       "version": "1.0.0",
       "author": {
