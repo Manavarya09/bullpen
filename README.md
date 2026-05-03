@@ -35,6 +35,21 @@ Other agent plugins give you anonymous "swarms." Bullpen gives you **a team**.
 /bullpen-init
 ```
 
+### Optional: enable the status-line glyph
+
+Add this to `~/.claude/settings.json` so the active teammate's glyph appears above your prompt:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh"
+  }
+}
+```
+
+(The plugin works without it — you'll still see the ASCII activation cards. The status line is just the persistent ambient touch.)
+
 ---
 
 ## How it works
