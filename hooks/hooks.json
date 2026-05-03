@@ -1,0 +1,45 @@
+{
+  "$comment": "bullpen hooks. PreToolUse renders the ASCII activation card + writes status state. PostToolUse clears it and signals the matching intern to log learnings. SessionStart launches the coach watcher.",
+  "PreToolUse": [
+    {
+      "matcher": "Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-agent.sh"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/post-agent.sh"
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/coach-watcher.sh start"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/coach-watcher.sh stop"
+        }
+      ]
+    }
+  ]
+}
