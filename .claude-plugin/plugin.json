@@ -1,0 +1,19 @@
+{
+  "name": "bullpen",
+  "version": "1.0.0",
+  "description": "Your AI engineering team — 64 named specialists, self-learning via Pinecone, with cinematic terminal UX and a built-in wellness coach.",
+  "author": {
+    "name": "Manav Arya Singh"
+  },
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "team",
+    "orchestration",
+    "self-learning",
+    "pinecone",
+    "rag",
+    "claude-code",
+    "open-source"
+  ]
+}
