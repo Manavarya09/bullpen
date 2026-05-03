@@ -47,9 +47,12 @@ async function main() {
     process.exit(0);
   }
 
-  const agentId =
+  let agentId =
     payload?.tool_input?.subagent_type || payload?.tool_input?.agent || null;
   if (!agentId) process.exit(0);
+
+  // Strip plugin-namespace prefix if present (e.g., "bullpen:ui-designer" → "ui-designer")
+  if (agentId.includes(':')) agentId = agentId.split(':').pop();
 
   const roster = safeReadJson(ROSTER_PATH);
   if (!roster?.agents) process.exit(0);
