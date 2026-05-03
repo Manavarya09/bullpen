@@ -43,7 +43,7 @@ Add this to `~/.claude/settings.json` so the active teammate's glyph appears abo
 {
   "statusLine": {
     "type": "command",
-    "command": "${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh"
+    "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/statusline.js"
   }
 }
 ```

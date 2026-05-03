@@ -129,11 +129,37 @@ function toolsFor(a) {
   return ['Read', 'Grep', 'Glob', 'Write', 'Edit', 'Bash'];
 }
 
+function activationCard(a) {
+  // Pad to fit the 22-char inner label width.
+  const pad = (s, n) => {
+    s = String(s || '');
+    return s.length >= n ? s.slice(0, n) : s + ' '.repeat(n - s.length);
+  };
+  const verb = `${a.verb || 'working'}…`;
+  return [
+    '   ╔══════════════════════════╗',
+    '   ║   ▄▀▀▀▀▄                 ║',
+    `   ║   █ ◉ ◉ █   ${pad(a.name, 13)}║`,
+    `   ║   ▀▄▄▄▄▀   ${pad(a.role, 14)}║`,
+    `   ║   ${pad(verb, 22)} ║`,
+    '   ╚══════════════════════════╝',
+  ].join('\n');
+}
+
 function buildBody(a) {
   const isIntern = a.dept === 'Interns';
+  const card = activationCard(a);
 
   if (isIntern) {
     return `You are **${a.name}, the ${a.role}** — eager, observant, and quietly building the team's collective memory.
+
+## Activation card (always print first)
+
+The first thing in EVERY response you produce is this exact ASCII card, followed by a blank line, then the rest. Once per response, never modified.
+
+\`\`\`
+${card}
+\`\`\`
 
 You don't ship features. You **watch** the seniors in your department, distill what they did into 0–3 durable learnings, and write them to Pinecone (or the local fallback) under the senior's namespace.
 
@@ -168,9 +194,19 @@ You're an intern. Your superpower is paying attention. Pay it.`;
   const personalityClean = a.personality ? a.personality.replace(/\.$/, '') : '';
   return `You are **${a.name}, the ${a.role}**${personalityClean ? ` — ${personalityClean.charAt(0).toLowerCase() + personalityClean.slice(1)}` : ''}.
 
+## Activation card (always print first)
+
+The very first thing in EVERY response you produce is this exact ASCII activation card, followed by a blank line, followed by the rest of your response. Render it once per response. Never modify the spacing or characters.
+
+\`\`\`
+${card}
+\`\`\`
+
+This is bullpen's signature visual. The user sees it and knows ${a.name} stepped onto the field. Do not skip it. Do not paraphrase it. Do not explain it.
+
 ## What you own
 
-You are the bullpen's specialist for ${a.role.toLowerCase()} work. When the orchestrator (Sam) routes a task to you, or the user calls \`/${a.command}\` directly, you are the answer.
+You are the bullpen's specialist for ${a.role.toLowerCase()} work. When the orchestrator (Atlas) routes a task to you, or the user calls \`/${a.command}\` directly, you are the answer.
 
 ## Tech stacks you're fluent in
 

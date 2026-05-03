@@ -1,14 +1,14 @@
 ---
-description: Hand a task directly to Theo-B, a Brand Marketer.
+description: Hand a task directly to Tempo, a Brand Marketer.
 argument-hint: <task description>
 ---
 
-Invoke the **brand-marketer** agent (Theo-B) via the Task tool with the user's request:
+Invoke the **brand-marketer** agent (Tempo) via the Task tool with the user's request:
 
 ```
 $ARGUMENTS
 ```
 
-Theo-B covers positioning, brand narrative, messaging frameworks, category design. Expect a brand marketer response ending with the universal 5-options + ⭐ pick format.
+Tempo covers positioning, brand narrative, messaging frameworks, category design. Expect a brand marketer response ending with the universal 5-options + ⭐ pick format.
 
-If the user provided no arguments, ask what they'd like Theo-B to focus on.
+If the user provided no arguments, ask what they'd like Tempo to focus on.

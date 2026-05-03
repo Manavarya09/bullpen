@@ -25,7 +25,7 @@ const NUDGES = {
     threshold: 1,
     flag: 'learning_asked',
     line:
-      "(•) Pip waves: Hey, I'm Pip — your data intern. Wanna let me write down what your team learns? Memory gets sharper every session. Try `/bullpen-learning on`.",
+      "(•) Sprout waves: Hey, I'm Sprout — one of your interns. Wanna let me start writing down what your team learns? Memory gets sharper every session. Try `/bullpen-learning on`.",
   },
   coach: {
     threshold: 3,
@@ -37,7 +37,7 @@ const NUDGES = {
     threshold: 5,
     flag: 'naming_asked',
     line:
-      "✨ Your team has default names (Maya, Raj, Kira, Sage…). Want to rename anyone? `/bullpen-name`. Or skip — they're fine as-is.",
+      "✨ Your team has default names (Atlas, Rune, Forge, Bastion, Sage…). Want to rename anyone? `/bullpen-name`. Or skip — they're fine as-is.",
   },
 };
 
