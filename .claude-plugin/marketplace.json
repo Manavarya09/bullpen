@@ -1,0 +1,29 @@
+{
+  "name": "bullpen",
+  "owner": {
+    "name": "Manav Arya Singh",
+    "url": "https://github.com/Manavarya09"
+  },
+  "plugins": [
+    {
+      "name": "bullpen",
+      "source": ".",
+      "description": "Your AI engineering team — 64 named specialists, self-learning via Pinecone, with cinematic terminal UX and a built-in wellness coach.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Manav Arya Singh"
+      },
+      "license": "MIT",
+      "category": "agents",
+      "keywords": [
+        "agents",
+        "team",
+        "orchestration",
+        "self-learning",
+        "pinecone",
+        "rag",
+        "claude-code"
+      ]
+    }
+  ]
+}
