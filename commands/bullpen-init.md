@@ -13,19 +13,12 @@ If `~/.bullpen/config.json` already exists, just print:
 
 Then exit.
 
-## Step 1 — Initialize local memory (silent)
-
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/pinecone-fallback.js init
-```
-
-## Step 2 — Write defaults
+## Step 1 — Write defaults
 
 Create `~/.bullpen/config.json` with these defaults (mode 600):
 
 ```json
 {
-  "memory_backend": "local",
   "personas": "on",
   "coach": "off",
   "learning": "off",
@@ -42,9 +35,11 @@ chmod 600 ~/.bullpen/config.json
 ```
 
 **Important defaults:**
-- `personas: "on"` — names show by default (Maya, Raj, Kira…). User can rename later.
+- `personas: "on"` — names show by default (Atlas, Rune, Forge…). User can rename later.
 - `coach: "off"` — no pings until user opts in. Sage will introduce herself after a few tasks.
-- `learning: "off"` — no Pinecone/local writes until Pip introduces himself and user opts in.
+- `learning: "off"` — no memory writes until Sprout introduces himself and user opts in.
+
+Memory itself lives in `<project>/.bullpen/memory.json` — created lazily on the first write. Per-project, plain JSON, auto-`.gitignore`'d. No daemons, no accounts.
 
 ## Step 3 — Print one line
 

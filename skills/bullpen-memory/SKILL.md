@@ -1,6 +1,6 @@
 ---
 name: bullpen-memory
-description: Use this skill before any bullpen agent runs to retrieve relevant past learnings from Pinecone (or the local SQLite-style fallback). Trigger when an agent activates and needs context from prior sessions — preferences, decisions, patterns, failures, or code snippets stored in their namespace. Keep the memory block under 1KB so it fits cleanly in the agent's prompt.
+description: Use this skill before any bullpen agent runs to retrieve relevant past learnings from the project's local memory store. Trigger when an agent activates and needs context from prior sessions — preferences, decisions, patterns, failures, or code snippets stored in their namespace. Memory lives in `<project>/.bullpen/memory.json` — per-project, plain JSON, no daemons.
 ---
 
 # bullpen-memory
@@ -15,51 +15,47 @@ Invoke automatically as the first step of any bullpen agent's task. Skip if the 
 
 - `agent_role` — the agent's `id` field from `roster.json` (e.g., `ui-designer`)
 - `task_summary` — a short string describing what the user is asking for
-- `project_path` — absolute path of the current working directory
+
+## Where memory lives
+
+```
+<project root>/.bullpen/memory.json
+```
+
+The "project root" is the nearest ancestor directory containing `.git` (falls back to current working directory if no git repo). Memory is per-project — different projects = different memory. Auto-`.gitignore`'d on first write so it never accidentally enters commits unless the user explicitly opts in.
 
 ## How to retrieve
 
-### Path A — Pinecone is available
-
-If `${HOME}/.bullpen/config.json` has `pinecone_api_key` set AND the Pinecone MCP plugin is installed, use these MCP tools (in order):
-
-1. **Search the role's namespace first**, scoped to `project_path`:
-   ```
-   mcp__plugin_pinecone_pinecone__search-records
-     index: "bullpen-memory"
-     namespace: <agent_role>
-     query: <task_summary>
-     topK: 5
-     filter: { project_path: { "$eq": <project_path> } }
-   ```
-2. If fewer than 3 results returned, **search again without the filter** to widen scope to all of the role's history.
-3. If still fewer than 3, **search the `bullpen-shared` namespace** with the same query and topK 3.
-
-### Path B — Local fallback
-
-If Pinecone isn't configured, run the bundled fallback script:
+Run the bundled memory script from the project working directory:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/pinecone-fallback.js search <agent_role> "<task_summary>" 5
+node ${CLAUDE_PLUGIN_ROOT}/scripts/memory.js search <agent_role> "<task_summary>" 5
 ```
 
-The script returns the same record shape, scored by token overlap.
+The script returns up to 5 records ranked by token-overlap relevance, in this shape:
+
+```json
+[
+  { "id": "...", "text": "...", "type": "snippet", "agent_role": "ui-designer", "project_path": "...", "created_at": "...", "_score": 0.4 },
+  ...
+]
+```
 
 ## How to inject
 
 Format the top results as a compact block prepended to the agent's instructions:
 
 ```
-<bullpen-memory role="<agent_role>">
-- [decision] User chose Postgres over MySQL because they need JSONB (2026-04-12)
+<bullpen-memory role="ui-designer">
+- [snippet] User prefers Tailwind over CSS modules; default to it (2026-04-12)
 - [pattern] This codebase uses `useFormHook` for all forms (2026-04-08)
-- [preference] User prefers Tailwind over CSS modules (2026-03-30)
+- [decision] User chose Postgres over MySQL because they need JSONB (2026-03-30)
 </bullpen-memory>
 ```
 
 **Rules:**
 
-- Sort by score descending, take at most 5.
+- Sort by `_score` descending, take at most 5.
 - One bullet per record: `- [<type>] <text> (<created_at>)`
 - Strip duplicates by `text` similarity (don't show two near-identical learnings).
 - Skip silently if no results — don't inject an empty block.
@@ -67,5 +63,5 @@ Format the top results as a compact block prepended to the agent's instructions:
 
 ## Failure modes
 
-- Pinecone unreachable mid-session → fall back to local store transparently. Don't block the agent.
-- No memories at all → that's fine. The agent runs without context. The Intern will start filling the namespace after the task.
+- Memory file missing (first run / new project) → returns empty array. Agent runs without context. The Intern will start filling it after the task.
+- Corrupt JSON → memory module returns empty + creates a fresh store. Agent should not block on memory issues.

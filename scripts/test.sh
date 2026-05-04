@@ -65,12 +65,15 @@ out=$(echo '{"tool_response":{"is_error":false}}' | CLAUDE_PLUGIN_ROOT="$ROOT" n
 
 # Test 8: memory write when learning is on
 rm -rf ~/.bullpen
-node -e "const fs=require('fs'),os=require('os'),p=os.homedir()+'/.bullpen';fs.mkdirSync(p,{recursive:true});fs.writeFileSync(p+'/config.json',JSON.stringify({memory_backend:'local',personas:'on',learning:'on',task_count:0}))"
-node scripts/pinecone-fallback.js init >/dev/null 2>&1
+TEST_PROJ="$(mktemp -d)/test-proj"
+mkdir -p "$TEST_PROJ" && cd "$TEST_PROJ" && git init -q && cd "$ROOT"
+node -e "const fs=require('fs'),os=require('os'),p=os.homedir()+'/.bullpen';fs.mkdirSync(p,{recursive:true});fs.writeFileSync(p+'/config.json',JSON.stringify({personas:'on',learning:'on',task_count:0}))"
 echo '{"tool_input":{"subagent_type":"bullpen:ui-designer","prompt":"design a button"}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node hooks/pre-agent.js >/dev/null 2>&1
-echo '{"tool_response":{"content":[{"text":"Built a primary button using Tailwind classes bg-blue-500 hover:bg-blue-600 with rounded-lg and px-4 py-2 spacing. Added focus ring for accessibility. Used the existing Button component pattern from src/components/ui/button.tsx."}]}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node hooks/post-agent.js >/dev/null 2>&1
-out=$(node scripts/pinecone-fallback.js search ui-designer "tailwind button" 5 2>/dev/null)
+(cd "$TEST_PROJ" && echo '{"tool_response":{"content":[{"text":"Built a primary button using Tailwind classes bg-blue-500 hover:bg-blue-600 with rounded-lg and px-4 py-2 spacing. Added focus ring for accessibility. Used the existing Button component pattern from src/components/ui/button.tsx."}]}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node "$ROOT/hooks/post-agent.js" >/dev/null 2>&1)
+out=$(cd "$TEST_PROJ" && node "$ROOT/scripts/memory.js" search ui-designer "tailwind button" 5 2>/dev/null)
 [[ "$out" == *"Tailwind"* ]] && assert "memory write stores task snippet" ok || assert "memory write stores task snippet" fail
+[ -f "$TEST_PROJ/.gitignore" ] && grep -q ".bullpen/" "$TEST_PROJ/.gitignore" && assert ".bullpen/ auto-added to .gitignore" ok || assert ".bullpen/ auto-added to .gitignore" fail
+rm -rf "$TEST_PROJ"
 
 # Test 9: memory read injects into context file
 echo '{"tool_input":{"subagent_type":"bullpen:ui-designer","prompt":"design another button"}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node hooks/pre-agent.js >/dev/null 2>&1

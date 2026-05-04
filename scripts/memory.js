@@ -2,111 +2,150 @@
 /**
  * bullpen — memory module
  *
- * Single API for read/write that auto-detects the backend (Pinecone if
- * config has pinecone_api_key + memory_backend "pinecone", otherwise
- * the local JSON store via pinecone-fallback.js).
+ * Per-project local memory. No daemons. No accounts. No databases.
+ * Just a JSON file at <project_root>/.bullpen/memory.json that grows
+ * as the team learns. Auto-gitignored on first write.
+ *
+ * Memory follows the project — clone the repo on another machine and
+ * the team's accumulated wisdom comes with you. Optionally commit
+ * `.bullpen/memory.json` to share learnings across the team.
  *
  * Importable from hooks; also runnable as a CLI for debugging.
  */
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
-const { upsert: localUpsert, search: localSearch } = require('./pinecone-fallback.js');
 
-const CONFIG_FILE = path.join(os.homedir(), '.bullpen', 'config.json');
-const PINECONE_INDEX = 'bullpen-memory';
+const STORE_FILENAME = 'memory.json';
+const STORE_DIR = '.bullpen';
 
-function readConfig() {
-  if (!fs.existsSync(CONFIG_FILE)) return null;
+function findProjectRoot(startDir = process.cwd()) {
+  // Walk up looking for a .git directory; stop at filesystem root.
+  let dir = path.resolve(startDir);
+  while (true) {
+    if (fs.existsSync(path.join(dir, '.git'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  // Fallback: cwd. Single-file projects without git still get memory.
+  return path.resolve(startDir);
+}
+
+function storePath() {
+  const root = findProjectRoot();
+  return path.join(root, STORE_DIR, STORE_FILENAME);
+}
+
+function ensureGitignore() {
+  // Append `.bullpen/` to the project's .gitignore if it isn't already
+  // there. Memory is private by default — users can opt in to committing
+  // by removing the line. We only touch .gitignore if .git exists.
+  const root = findProjectRoot();
+  if (!fs.existsSync(path.join(root, '.git'))) return;
+  const giPath = path.join(root, '.gitignore');
+  let lines = [];
+  if (fs.existsSync(giPath)) {
+    lines = fs.readFileSync(giPath, 'utf8').split('\n');
+    if (lines.some((l) => l.trim() === '.bullpen/' || l.trim() === '.bullpen')) return;
+  }
+  const newContent =
+    (lines.length ? lines.join('\n').replace(/\n*$/, '\n\n') : '') +
+    '# bullpen — per-project AI memory (uncomment to share with the team)\n.bullpen/\n';
   try {
-    return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    fs.writeFileSync(giPath, newContent);
   } catch {
-    return null;
+    // best-effort; if gitignore is read-only or anything weird, skip silently
   }
 }
 
-async function pineconeRequest(apiKey, host, pathname, body) {
-  const url = `https://${host}${pathname}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Api-Key': apiKey,
-      'Content-Type': 'application/json',
-      'X-Pinecone-API-Version': '2025-01',
-    },
-    body: JSON.stringify(body),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Pinecone ${pathname} ${res.status}: ${text}`);
-  return text ? JSON.parse(text) : {};
-}
-
-async function getPineconeHost(apiKey) {
-  const res = await fetch(`https://api.pinecone.io/indexes/${PINECONE_INDEX}`, {
-    headers: { 'Api-Key': apiKey, 'X-Pinecone-API-Version': '2025-01' },
-  });
-  if (!res.ok) throw new Error(`Index lookup failed: ${res.status}`);
-  const data = await res.json();
-  return data.host;
-}
-
-async function pineconeSearch(apiKey, namespace, query, topK, filter) {
-  const host = await getPineconeHost(apiKey);
-  const body = {
-    query: { topK, inputs: { text: query } },
-  };
-  if (filter) body.query.filter = filter;
-  const data = await pineconeRequest(apiKey, host, `/records/namespaces/${encodeURIComponent(namespace)}/search`, body);
-  return (data?.result?.hits || []).map((h) => ({
-    ...h.fields,
-    _score: h._score,
-  }));
-}
-
-async function pineconeUpsert(apiKey, namespace, records) {
-  const host = await getPineconeHost(apiKey);
-  await pineconeRequest(apiKey, host, `/records/namespaces/${encodeURIComponent(namespace)}/upsert`, { records });
-}
-
-async function search(namespace, query, topK = 5, filter = null) {
-  const cfg = readConfig() || {};
-  if (cfg.memory_backend === 'pinecone' && cfg.pinecone_api_key) {
-    try {
-      return await pineconeSearch(cfg.pinecone_api_key, namespace, query, topK, filter);
-    } catch (e) {
-      // fall through to local
-    }
+function loadStore() {
+  const p = storePath();
+  if (!fs.existsSync(p)) {
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, JSON.stringify({ namespaces: {} }, null, 2));
+    ensureGitignore();
   }
-  return localSearch(namespace, query, topK);
+  try {
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch {
+    return { namespaces: {} };
+  }
+}
+
+function saveStore(store) {
+  const p = storePath();
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(store, null, 2));
+  ensureGitignore();
+}
+
+function tokenize(s) {
+  return (s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
+}
+
+function score(queryTokens, recordTokens) {
+  if (!queryTokens.length || !recordTokens.length) return 0;
+  const recSet = new Set(recordTokens);
+  let hits = 0;
+  for (const t of queryTokens) if (recSet.has(t)) hits++;
+  return hits / Math.sqrt(recordTokens.length);
 }
 
 async function upsert(namespace, record) {
-  const cfg = readConfig() || {};
-  if (cfg.memory_backend === 'pinecone' && cfg.pinecone_api_key) {
-    try {
-      await pineconeUpsert(cfg.pinecone_api_key, namespace, [record]);
-      return;
-    } catch (e) {
-      // fall through to local
-    }
-  }
-  localUpsert(namespace, record);
+  const store = loadStore();
+  if (!store.namespaces[namespace]) store.namespaces[namespace] = [];
+  const tokens = tokenize(record.text);
+  store.namespaces[namespace].push({ ...record, _tokens: tokens });
+  saveStore(store);
+}
+
+async function search(namespace, query, topK = 5) {
+  const store = loadStore();
+  const records = store.namespaces[namespace] || [];
+  if (!records.length) return [];
+  const qt = tokenize(query);
+  return records
+    .map((r) => ({ record: r, score: score(qt, r._tokens || tokenize(r.text)) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+    .filter((m) => m.score > 0)
+    .map((m) => {
+      const { _tokens, ...clean } = m.record;
+      return { ...clean, _score: Number(m.score.toFixed(4)) };
+    });
 }
 
 if (require.main === module) {
   (async () => {
     const [, , cmd, ...args] = process.argv;
-    if (cmd === 'search') {
+    if (cmd === 'init') {
+      loadStore();
+      console.log(`✓ Memory store initialized at ${storePath()}`);
+    } else if (cmd === 'search') {
       const [ns, q, k] = args;
+      if (!ns || !q) {
+        console.error('Usage: search <namespace> "<query>" [topK]');
+        process.exit(1);
+      }
       const r = await search(ns, q, k ? Number(k) : 5);
       console.log(JSON.stringify(r, null, 2));
     } else if (cmd === 'upsert') {
       const [ns, json] = args;
+      if (!ns || !json) {
+        console.error('Usage: upsert <namespace> <json>');
+        process.exit(1);
+      }
       await upsert(ns, JSON.parse(json));
       console.log('✓');
+    } else if (cmd === 'where') {
+      console.log(storePath());
     } else {
-      console.error('Usage: search <ns> <q> [k] | upsert <ns> <json>');
+      console.error('Commands: init | search <ns> <q> [k] | upsert <ns> <json> | where');
       process.exit(1);
     }
   })().catch((e) => {
@@ -115,4 +154,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { search, upsert };
+module.exports = { search, upsert, findProjectRoot, storePath };

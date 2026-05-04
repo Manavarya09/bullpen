@@ -1,6 +1,6 @@
 ---
 name: bullpen-learn
-description: Use this skill after a bullpen agent completes a task to extract 0-3 durable learnings (decisions, patterns, preferences, failures, or code snippets) and write them to Pinecone (or the local fallback) under that agent's namespace. The matching Intern agent runs this. Keep each learning self-contained and project-scoped.
+description: Use this skill after a bullpen agent completes a task to extract 0-3 durable learnings (decisions, patterns, preferences, failures, or code snippets) and write them to the project's local memory store (`<project>/.bullpen/memory.json`) under that agent's namespace. The matching Intern agent runs this. Keep each learning self-contained and project-scoped.
 ---
 
 # bullpen-learn
@@ -43,33 +43,28 @@ Read the senior's task summary + output. Identify 0-3 **durable** facts that wou
 
 ## How to write
 
-### Path A — Pinecone
-
-```
-mcp__plugin_pinecone_pinecone__upsert-records
-  index: "bullpen-memory"
-  namespace: <senior_role | "bullpen-shared">
-  records: [
-    {
-      id: "<uuid>",
-      text: "<the learning, natural language, complete sentence>",
-      type: "decision" | "pattern" | "preference" | "failure" | "snippet",
-      agent_role: "<senior_role>",
-      project_path: "<absolute path>",
-      created_at: "<ISO 8601>",
-      session_id: "<session id>",
-      ref_files: "<comma-separated list of files referenced, may be empty>"
-    }
-  ]
-```
-
-Per Pinecone's record-schema rules: single fieldMap (`text` is the embedded field), no nested objects, no top-level `metadata` field.
-
-### Path B — Local fallback
+Memory lives at `<project root>/.bullpen/memory.json` — per-project, plain JSON, no daemons. Use the bundled memory module:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/pinecone-fallback.js upsert <namespace> '<json-record>'
+node ${CLAUDE_PLUGIN_ROOT}/scripts/memory.js upsert <namespace> '<json-record>'
 ```
+
+Record shape:
+
+```json
+{
+  "id": "<uuid>",
+  "text": "<the learning, natural language, complete sentence>",
+  "type": "decision | pattern | preference | failure | snippet",
+  "agent_role": "<senior_role>",
+  "project_path": "<absolute path>",
+  "created_at": "<ISO 8601>",
+  "session_id": "<session id>",
+  "ref_files": "<comma-separated list of files referenced, may be empty>"
+}
+```
+
+The store auto-creates `<project>/.bullpen/memory.json` on first write and adds `.bullpen/` to `.gitignore` so memory stays private by default. Users can manually `git add .bullpen/memory.json` if they want team-shared learnings.
 
 ## After writing
 

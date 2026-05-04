@@ -15,12 +15,17 @@ Parse `$ARGUMENTS`:
   bullpen config (~/.bullpen/config.json)
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Memory backend       : local (use /bullpen-pinecone to upgrade)
   Personas             : on
   Coach                : off  (use /bullpen-coach on to enable)
   Learning             : off  (use /bullpen-learning on to enable)
   Tasks completed      : <task_count>
   Persona overrides    : <count> renamed
+  Memory file          : <project_root>/.bullpen/memory.json
+  ```
+
+  Resolve `<project_root>` by running:
+  ```bash
+  node ${CLAUDE_PLUGIN_ROOT}/scripts/memory.js where
   ```
 
   If the user has any persona overrides, list them on the next line(s):
@@ -30,14 +35,12 @@ Parse `$ARGUMENTS`:
   - `personas` ∈ {on, off}
   - `coach` ∈ {on, off}
   - `learning` ∈ {on, off}
-  - `memory_backend` ∈ {local, pinecone}
 
   Validate the value. Reject anything else (e.g., `set personas yes` → "Use 'on' or 'off', not 'yes'").
 
-- `reset` → confirm with the user, then delete `~/.bullpen/config.json` and the local memory store. Tell them to run `/bullpen-init` after.
+- `reset` → confirm with the user, then delete `~/.bullpen/config.json`. Tell them to run `/bullpen-init` after. Do NOT touch the project's `.bullpen/memory.json` — that's per-project user data.
 
 ## Hard rules
 
-- **Never print or expose `pinecone_api_key`** in the view. Show it as `<set>` if present, or `<not set>`.
 - File mode 600 must be preserved on every write. Run `chmod 600` after writing.
 - If the config file doesn't exist, prompt the user to run `/bullpen-init` first.

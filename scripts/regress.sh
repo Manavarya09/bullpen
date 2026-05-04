@@ -89,7 +89,7 @@ if(missing.length) console.log(missing.join(',')); else console.log('OK');
 " | grep -q "^OK$" && ok "every roster role has a command" || fail "missing command files"
 
 # Utility commands
-for c in bullpen-init bullpen-config bullpen-name bullpen-knowledge bullpen-learning bullpen-coach bullpen-pinecone; do
+for c in bullpen-init bullpen-config bullpen-name bullpen-knowledge bullpen-learning bullpen-coach; do
   [ -f "commands/${c}.md" ] && true || fail "missing command" "$c"
 done
 ok "utility commands present"
@@ -111,11 +111,11 @@ for s in bullpen-memory bullpen-learn react-rsc idempotent-apis; do
 done
 
 # ─── SCRIPTS ───────────────────────────────────────────────
-for s in roster.json glyphs.json coach-messages.json gen-agents.js gen-commands.js memory.js pinecone-fallback.js pinecone-init.js preflight.js quality-data.js test.sh; do
+for s in roster.json glyphs.json coach-messages.json gen-agents.js gen-commands.js memory.js preflight.js quality-data.js test.sh; do
   [ -f "scripts/$s" ] && ok "scripts/$s exists" || fail "missing script" "$s"
 done
 
-for s in gen-agents.js gen-commands.js memory.js pinecone-fallback.js pinecone-init.js preflight.js quality-data.js; do
+for s in gen-agents.js gen-commands.js memory.js preflight.js quality-data.js; do
   node --check "scripts/$s" 2>/dev/null && ok "scripts/$s valid syntax" || fail "syntax error" "$s"
 done
 
@@ -157,23 +157,32 @@ F2=$(node hooks/statusline.js 2>&1)
 F3=$(node hooks/statusline.js 2>&1)
 [ "$F1" != "$F2" ] && [ "$F2" != "$F3" ] && ok "status line dot animation cycles" || fail "status line static"
 
-# ─── MEMORY LOOP ───────────────────────────────────────────
+# ─── MEMORY LOOP (per-project repo storage) ──────────────
 rm -rf ~/.bullpen
 mkdir -p ~/.bullpen
-echo '{"memory_backend":"local","personas":"on","learning":"on","task_count":0}' > ~/.bullpen/config.json
-node scripts/pinecone-fallback.js init >/dev/null 2>&1
+echo '{"personas":"on","learning":"on","task_count":0}' > ~/.bullpen/config.json
 
-# Write
-echo '{"tool_input":{"subagent_type":"bullpen:database-engineer","prompt":"design index for slow query"}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node hooks/pre-agent.js >/dev/null 2>&1
-echo '{"tool_response":{"content":[{"text":"Created a partial index on user_events(user_id, created_at) WHERE deleted_at IS NULL. Verified query plan now uses Index Scan instead of Seq Scan. Reduced latency from 800ms to 12ms."}]}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node hooks/post-agent.js >/dev/null 2>&1
+TEST_PROJ="$(mktemp -d)/test-memory-proj"
+mkdir -p "$TEST_PROJ" && (cd "$TEST_PROJ" && git init -q)
 
-out=$(node scripts/pinecone-fallback.js search database-engineer "partial index" 5 2>/dev/null)
-[[ "$out" == *"partial index"* ]] && ok "memory write stores DB snippet" || fail "memory write broken"
+# Write — run hooks from inside the test project so memory.js finds the project root
+(cd "$TEST_PROJ" && echo '{"tool_input":{"subagent_type":"bullpen:database-engineer","prompt":"design index for slow query"}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node "$ROOT/hooks/pre-agent.js" >/dev/null 2>&1)
+(cd "$TEST_PROJ" && echo '{"tool_response":{"content":[{"text":"Created a partial index on user_events(user_id, created_at) WHERE deleted_at IS NULL. Verified query plan now uses Index Scan instead of Seq Scan. Reduced latency from 800ms to 12ms."}]}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node "$ROOT/hooks/post-agent.js" >/dev/null 2>&1)
+
+[ -f "$TEST_PROJ/.bullpen/memory.json" ] && ok "memory.json written into project repo" || fail "memory.json not written"
+
+out=$(cd "$TEST_PROJ" && node "$ROOT/scripts/memory.js" search database-engineer "partial index" 5 2>/dev/null)
+[[ "$out" == *"partial index"* ]] && ok "memory search retrieves stored learning" || fail "memory search broken"
+
+# Auto .gitignore
+[ -f "$TEST_PROJ/.gitignore" ] && grep -q "\.bullpen/" "$TEST_PROJ/.gitignore" && ok ".bullpen/ auto-added to .gitignore" || fail ".gitignore not updated"
 
 # Read injects to context file
-echo '{"tool_input":{"subagent_type":"bullpen:database-engineer","prompt":"another slow query problem"}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node hooks/pre-agent.js >/dev/null 2>&1
+(cd "$TEST_PROJ" && echo '{"tool_input":{"subagent_type":"bullpen:database-engineer","prompt":"another slow query problem"}}' | CLAUDE_PLUGIN_ROOT="$ROOT" node "$ROOT/hooks/pre-agent.js" >/dev/null 2>&1)
 ctx="$TMPDIR/bullpen-memory-database-engineer.md"
 [ -s "$ctx" ] && grep -q "partial index" "$ctx" && ok "memory read injects past learning" || fail "memory read broken"
+
+rm -rf "$TEST_PROJ"
 
 # ─── NUDGE SEQUENCING ──────────────────────────────────────
 rm -rf ~/.bullpen
@@ -225,12 +234,13 @@ CLAUDE_PLUGIN_ROOT="$ROOT" bash hooks/coach-watcher.sh stop
 status=$(CLAUDE_PLUGIN_ROOT="$ROOT" bash hooks/coach-watcher.sh status 2>&1)
 [[ "$status" == *"stopped"* ]] && ok "coach-watcher stops cleanly" || fail "coach-watcher stop broken"
 
-# ─── ROUNDTRIP MEMORY (Pinecone fallback) ─────────────────
-rm -rf ~/.bullpen
-node scripts/pinecone-fallback.js init >/dev/null 2>&1
-node scripts/pinecone-fallback.js upsert react-engineer '{"id":"t1","text":"User chose Tailwind over CSS modules","type":"preference","agent_role":"react-engineer","project_path":"/x","created_at":"2026-05","session_id":"s","ref_files":""}' >/dev/null 2>&1
-out=$(node scripts/pinecone-fallback.js search react-engineer "tailwind preference" 3 2>/dev/null)
-[[ "$out" == *"Tailwind"* ]] && ok "fallback store roundtrip works" || fail "fallback store broken"
+# ─── ROUNDTRIP MEMORY (per-project local store) ──────────
+TEST_PROJ2="$(mktemp -d)/test-roundtrip-proj"
+mkdir -p "$TEST_PROJ2" && (cd "$TEST_PROJ2" && git init -q)
+(cd "$TEST_PROJ2" && node "$ROOT/scripts/memory.js" upsert react-engineer '{"id":"t1","text":"User chose Tailwind over CSS modules","type":"preference","agent_role":"react-engineer","project_path":"/x","created_at":"2026-05","session_id":"s","ref_files":""}' >/dev/null 2>&1)
+out=$(cd "$TEST_PROJ2" && node "$ROOT/scripts/memory.js" search react-engineer "tailwind preference" 3 2>/dev/null)
+[[ "$out" == *"Tailwind"* ]] && ok "memory store upsert + search roundtrip" || fail "memory store roundtrip broken"
+rm -rf "$TEST_PROJ2"
 
 # Cleanup
 rm -rf ~/.bullpen "$TMPDIR/bullpen-"* 2>/dev/null || true

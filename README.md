@@ -52,7 +52,7 @@ A small `[◇] Rune is sketching ...` line lives in my status line while she wor
 - **64 named teammates.** Atlas leads. Rune designs. Forge writes backend. Bastion is paranoid about security. Vault is the DBA. Sprout, Ash, Wren, Skye, Lex are the interns. Sage is the coach. The full roster is in [the design doc](docs/superpowers/specs/2026-05-04-bullpen-design.md).
 - **They've got opinions.** Each one has pinned 2025 defaults (React 19.2, Postgres 17, Tailwind v4, etc.), an anti-pattern table, a verification checklist, and explicit handoff conditions. They tell you what they'd ship and what they considered.
 - **Three ways to talk to them.** `/bullpen <task>` (Atlas delegates), `/<role> <task>` (call a specific person), or just describe what you need in plain English (a hook routes the right person).
-- **They remember.** Each role has its own memory namespace. After every task, the matching intern writes down what was learned. Local JSON store by default, optional Pinecone if you want it.
+- **They remember — and the memory lives in your repo.** `<your-project>/.bullpen/memory.json`. Per-project. Plain JSON. Auto-`.gitignore`'d. No accounts, no daemons, no databases. Clone the repo on another machine and the team's accumulated wisdom comes with it. Want to share with your team? `git add` it.
 - **Sage looks out for me.** Two hours into a session she nudges me to stretch. After a bug fight, she tells me I did good. None of this costs tokens — it's all local hooks.
 
 ## Install
@@ -76,8 +76,6 @@ Want the status-line glyph? Add this to `~/.claude/settings.json`:
 }
 ```
 
-Want better memory? `/bullpen-pinecone` swaps the local store for Pinecone.
-
 ## A few commands worth knowing
 
 ```
@@ -92,7 +90,7 @@ Want better memory? `/bullpen-pinecone` swaps the local store for Pinecone.
 ## Honest notes
 
 - **The agents are good.** I've put real work into the prompts (anti-patterns, version-pinned defaults, verification checklists, handoff rules). They make confident calls.
-- **The memory is fine, not SOTA.** It's per-role vector retrieval today. Hybrid retrieval (BM25 + dense) and cross-encoder rerank are on the list.
+- **The memory is honest.** It's a JSON file in your repo with token-overlap ranking — fine for thousands of records per role, no fancy vectors. If you outgrow it, that's a good problem and we'll add a real index.
 - **It's macOS / Linux.** Should work on WSL. Probably not Windows native — the hooks shell out.
 - **Requires Node 18+.** Already required by Claude Code, so you have it.
 
