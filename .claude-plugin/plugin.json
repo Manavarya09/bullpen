@@ -1,19 +1,30 @@
 {
   "name": "bullpen",
   "version": "1.0.0",
-  "description": "Your AI engineering team — 64 named specialists, self-learning via Pinecone, with cinematic terminal UX and a built-in wellness coach.",
+  "description": "My AI engineering team for Claude Code — 64 named specialists I actually use every day.",
   "author": {
     "name": "Manav Arya Singh"
   },
   "license": "MIT",
   "keywords": [
-    "agents",
-    "team",
-    "orchestration",
-    "self-learning",
-    "pinecone",
-    "rag",
     "claude-code",
-    "open-source"
+    "claude-ai",
+    "ai-agents",
+    "multi-agent-systems",
+    "llm-agents",
+    "ai-coding-assistant",
+    "developer-tools",
+    "anthropic",
+    "claude-plugin",
+    "agent-framework",
+    "ai-team",
+    "ai-orchestration",
+    "mcp",
+    "rag",
+    "pinecone",
+    "productivity-tools",
+    "open-source",
+    "ai-pair-programming",
+    "self-learning-agents"
   ]
 }
