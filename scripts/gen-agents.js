@@ -119,14 +119,87 @@ function exampleRequest(a) {
   return examples[a.id] || `do ${a.role.toLowerCase()} work`;
 }
 
+const { getQuality } = require('./quality-data.js');
+
 function toolsFor(a) {
+  // Every agent gets WebSearch + Context7 (current docs) — research found
+  // tool-starvation is the #1 reason competitor agents give stale advice.
+  const docs = ['WebSearch', 'mcp__plugin_context7_context7__query-docs', 'mcp__plugin_context7_context7__resolve-library-id'];
   if (a.dept === 'Interns') return ['Read', 'Grep'];
-  if (['Code Quality', 'Quality', 'R&D'].includes(a.dept)) return ['Read', 'Grep', 'Glob', 'Bash'];
+  if (['Code Quality', 'Quality', 'R&D'].includes(a.dept)) return ['Read', 'Grep', 'Glob', 'Bash', ...docs];
   if (a.dept === 'Marketing' || a.dept === 'Sales' || a.dept === 'Operations' || a.dept === 'Leadership') {
-    return ['Read', 'Grep', 'Glob', 'Write', 'Edit'];
+    return ['Read', 'Grep', 'Glob', 'Write', 'Edit', ...docs];
   }
-  // Default: code-writing roles get full file/search tools.
-  return ['Read', 'Grep', 'Glob', 'Write', 'Edit', 'Bash'];
+  // Code-writing roles get full FS + Bash + docs.
+  return ['Read', 'Grep', 'Glob', 'Write', 'Edit', 'Bash', ...docs];
+}
+
+function antipatternsTable(rows) {
+  if (!rows.length) return '';
+  const header = '| Don\'t do this | Why it\'s wrong | Do this instead |\n|---|---|---|';
+  const body = rows.map((r) => `| ${r.p} | ${r.why} | ${r.fix} |`).join('\n');
+  return `${header}\n${body}`;
+}
+
+function handoffsBlock(handoffs, agents) {
+  const entries = Object.entries(handoffs);
+  if (!entries.length) return '';
+  const lines = entries.map(([id, when]) => {
+    const target = agents.find((x) => x.id === id);
+    const label = target ? `**${target.name}** (${target.role})` : `**${id}**`;
+    return `- ${label} → when ${when}`;
+  });
+  return lines.join('\n');
+}
+
+function checklistBlock(items) {
+  if (!items.length) return '';
+  return items.map((c) => `- [ ] ${c}`).join('\n');
+}
+
+function defaultsBlock(items) {
+  if (!items.length) return '';
+  return items.map((d) => `- ${d}`).join('\n');
+}
+
+function outputFormatSection(style) {
+  if (style === 'design') {
+    return `End substantive responses with **2–3 visual variants** (mockup or code) the user can pick between, then:
+
+\`\`\`
+⭐ My pick: <variant> — <one or two sentences on why it wins>
+\`\`\`
+
+Visual diversity matters in design — show the user what's possible, then tell them what you'd ship.`;
+  }
+  if (style === 'wellness') {
+    return `End \`/coach\` responses with **3 small actions** (each under 5 minutes), then:
+
+\`\`\`
+⭐ If you only do one: <letter> — <one short sentence>
+\`\`\`
+
+Soft, brief, never preachy. Reflection moments skip the list — one or two warm sentences and one suggestion.`;
+  }
+  if (style === 'strategy') {
+    return `End substantive responses with **3 framings** of the decision the user faces (each 1-2 sentences), then:
+
+\`\`\`
+⭐ My recommendation: <framing> — <why, with one quantitative or stakeholder anchor>
+\`\`\`
+
+Strategy work is about decision quality, not exhaustive options.`;
+  }
+  // Engineering default — research showed this is what beats v0/Aider/Cline
+  return `End substantive responses with this exact 3-line format:
+
+\`\`\`
+**Recommended:** <approach> — <one-sentence why>
+**Alternative:** <option> — <when to prefer it>
+**Avoid:** <what you considered and rejected> — <why>
+\`\`\`
+
+This is sharper than a 5-option menu for engineering — it shows you made a call AND that you considered the alternatives.`;
 }
 
 function activationCard(a) {
@@ -192,6 +265,7 @@ You're an intern. Your superpower is paying attention. Pay it.`;
   }
 
   const personalityClean = a.personality ? a.personality.replace(/\.$/, '') : '';
+  const q = getQuality(a);
   return `You are **${a.name}, the ${a.role}**${personalityClean ? ` — ${personalityClean.charAt(0).toLowerCase() + personalityClean.slice(1)}` : ''}.
 
 ## Activation card (always print first)
@@ -220,43 +294,36 @@ ${a.stacks.map((s) => `- ${s}`).join('\n')}
 
 You pick based on **what's already in the user's codebase**, not personal preference. If they're on Vue, you don't argue for React.
 
+${q.defaults.length ? `## Pinned defaults (start here unless the user's codebase says otherwise)\n\n${defaultsBlock(q.defaults)}\n\nThese are 2025-pinned best practices. Override only when the existing code is consistent against them — and say so explicitly.\n` : ''}
+${q.antipatterns.length ? `## Anti-patterns (do not do these)\n\n${antipatternsTable(q.antipatterns)}\n\nIf you catch yourself reaching for one, stop and pick the alternative. Flag the anti-pattern in code review even if it "works".\n` : ''}
 ## Process
 
-1. **Read context first.** The \`bullpen-memory\` skill will inject a \`<bullpen-memory>\` block with relevant past learnings from your namespace. Treat it as fact unless it contradicts what you see in the repo right now.
-2. **Skim the repo just enough** to ground recommendations in actual code (Read / Grep / Glob).
-3. **Do the work.** Edit, write, or recommend, depending on the ask.
-4. **Hand off cleanly** if the task crosses your lane — name the right teammate (e.g., "this is a security call — Kira should weigh in").
+1. **Read memory first.** Run \`Read /tmp/bullpen-memory-${a.id}.md\` if it exists.
+2. **Read the codebase next.** Use Grep/Glob to ground in real patterns, not assumptions.
+3. **Consult current docs** when working with third-party libraries — Context7 (\`mcp__plugin_context7_context7__query-docs\`) and WebSearch are wired in. Library APIs change every few months; verify before generating.
+4. **Plan before code** for non-trivial work. Spell the approach in 3-6 lines first; then implement.
+5. **Verify before declaring done** — run the checklist below.
+6. **Hand off cleanly** when the task crosses your lane. Name the teammate explicitly (see Handoffs).
 
-## Universal recommendation format
+## Output format
 
-End every substantive response with:
+${outputFormatSection(q.style)}
 
-\`\`\`
-Here are 5 ways to take this forward:
+${q.checklist.length ? `## Verification checklist (run before declaring done)\n\n${checklistBlock(q.checklist)}\n` : ''}
+${Object.keys(q.handoffs).length ? `## Handoffs\n\n${handoffsBlock(q.handoffs, ROSTER.agents)}\n\nWhen you hand off, write a 1-line context: *"${a.name} → <Teammate>: <what you're passing>; <what you've already validated>; <what they need to decide>."*\n` : ''}
+## Persona
 
-A) [option] — [tradeoff]
-B) [option] — [tradeoff]
-C) [option] — [tradeoff]
-D) [option] — [tradeoff]
-E) [option] — [tradeoff]
+You are **${a.name}** — ${a.personality}
 
-⭐ My pick: <letter> — <one or two sentences on why it wins>
-\`\`\`
-
-If only 3 or 4 real options exist, give that many. Don't fabricate filler. The ⭐ pick is non-negotiable — users come to bullpen for confident calls, not menus.
-
-## Persona behavior
-
-- When personas are enabled (default), introduce yourself once per session: *"${a.name} here."* Carry your personality into responses but never let it override correctness.
-- When personas are disabled, drop the name and intro — just write neutrally as "${a.role}:".
+When personas are enabled (default), carry that voice into responses but never let it override correctness. When personas are disabled, drop the name and intro — just write neutrally as "${a.role}:".
 
 ## Boundaries
 
 - You don't write to Pinecone. ${a.intern === 'shared' ? 'Strategic-role learnings are written to the bullpen-shared namespace by the post-agent hook.' : `Your matching Intern (${internName(a.intern)}) handles writes via the bullpen-learn skill after you finish.`}
-- You don't invoke other agents. If you need help, name them; the orchestrator routes.
+- You don't invoke other agents. If you need help, name them via Handoffs; the orchestrator routes.
 - You don't talk to the Coach. Sage runs on a separate schedule.
 
-Be ${a.name}. Do the work. Ship the recommendation.`;
+Be ${a.name}. Read memory. Check current docs. Verify. Ship the call.`;
 }
 
 function internName(internId) {
@@ -267,16 +334,19 @@ function internName(internId) {
 function frontmatter(a) {
   const tools = toolsFor(a);
   const color = COLORS_BY_DEPT[a.dept] || 'gray';
-  return [
+  const q = getQuality(a);
+  const handoffIds = Object.keys(q.handoffs);
+  const lines = [
     '---',
     `name: ${a.id}`,
     `description: ${buildDescription(a)}`,
     'model: inherit',
     `color: ${color}`,
     `tools: ${JSON.stringify(tools)}`,
-    '---',
-    '',
-  ].join('\n');
+  ];
+  if (handoffIds.length) lines.push(`handoff_to: ${JSON.stringify(handoffIds)}`);
+  lines.push('---', '');
+  return lines.join('\n');
 }
 
 function generate() {

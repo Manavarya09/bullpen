@@ -76,23 +76,34 @@ When a teammate spins up, you see them step onto the field:
 ```
    ╔══════════════════════════╗
    ║   ▄▀▀▀▀▄                 ║
-   ║   █ ◉ ◉ █   Maya         ║
+   ║   █ ◉ ◉ █   Rune         ║
    ║   ▀▄▄▄▄▀   UI Designer   ║
-   ║   sketching wireframes…  ║
+   ║   sketching…             ║
    ╚══════════════════════════╝
 ```
 
-A compact status glyph (e.g., `[◇] Maya is sketching ...`) stays in your status line while they work. **Zero token cost** — all rendered locally.
+A compact status glyph (e.g., `[◇] Rune is sketching ...`) stays in your status line while they work. **Zero token cost** — all rendered locally.
+
+### They actually know their stuff
+
+Every agent has:
+- **Pinned 2025 framework defaults** (e.g., React 19.2 + Next.js 16 RSC by default, not "let me ask which version")
+- **Anti-pattern tables** with explicit "don't do this / do this" rows
+- **Verification checklists** they run before declaring done
+- **Explicit handoff conditions** to other teammates when work crosses lanes
+- **Context7 + WebSearch** wired in for current library docs
+
+The differentiator isn't headcount — it's that each agent makes a confident call and shows you what they considered.
 
 ### They learn from every session
 
-Pinecone-backed semantic memory, namespaced per role. Five Intern agents quietly observe their senior counterparts and write learnings after every task. The seniors get smarter. You can browse what each teammate knows:
+Per-role memory namespaces. After each task, the matching Intern logs durable learnings (decisions, patterns, preferences, snippets) so the next session benefits.
 
 ```bash
-/bullpen-knowledge maya
+/bullpen-knowledge rune
 ```
 
-No Pinecone? bullpen falls back to a local SQLite vector store. Same schema, fully offline.
+**Backend:** local JSON store by default (zero deps), or Pinecone via `/bullpen-pinecone`. Hybrid retrieval (BM25 + dense) and cross-encoder reranking are on the roadmap — current retrieval is good enough to be useful, honest about not yet being SOTA.
 
 ### The Coach
 
