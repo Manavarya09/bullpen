@@ -1,12 +1,8 @@
 <div align="center">
 
-<!-- Banner: drop assets/banner.png here. Prompt for generating it lives in docs/banner-prompt.md -->
+<img src="assets/banner.svg" alt="bullpen" width="640" />
 
-# bullpen
-
-**Your deep bench of 64 AI specialists. Warming up to step in on demand.**
-
-A Claude Code plugin that gives you a complete AI engineering company — designers, engineers, marketers, sales, ops, even a wellness coach — orchestrated as a team, self-learning over time, rendered with cinematic terminal flair.
+<br />
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -14,64 +10,31 @@ A Claude Code plugin that gives you a complete AI engineering company — design
 
 ---
 
-## Why bullpen?
+I built this for myself. I needed an engineering team and didn't have one, so I made one.
 
-Other agent plugins give you anonymous "swarms." Bullpen gives you **a team**.
+Now I open Claude Code and I have a UI designer, a backend lead, a security engineer, a DBA, a writer, a sales guy, a wellness coach, and 57 other people I work with every day. They have names. They have opinions. They learn from how I actually build.
 
-| | Other agent platforms | **bullpen** |
-|---|---|---|
-| Pitch | "Multi-agent orchestration" | "Your AI engineering team" |
-| Mental model | Anonymous swarms | Named teammates with personalities |
-| Onboarding | Dozens of plugins, hundreds of tools | One plugin, one init |
-| Memory | Opaque shared pool | Browsable per-role namespaces |
-| Wellness | None | The Coach proactively cares for you |
-| Visual | Generic CLI output | ASCII activation cards + status glyphs |
+This is my office. I'm publishing it because maybe you want one too.
 
----
+## How I actually use it
 
-## Install
+A normal day looks something like this:
 
 ```bash
-/plugin marketplace add Manavarya09/bullpen
-/plugin install bullpen@bullpen
-/bullpen-init
+# I want a quick redesign on a settings page
+/bullpen:ui pull up the settings page and make the spacing breathe
+
+# I'm not sure how to model a tricky migration
+/bullpen:db I have to rename this column without downtime, walk me through it
+
+# I'm three hours in and Sage will quietly tell me to drink water
+# I don't have to ask for that — she's just on
+
+# Let the team lead figure out who to pull in
+/bullpen build me a magic-link login flow end-to-end
 ```
 
-### Optional: enable the status-line glyph
-
-Add this to `~/.claude/settings.json` so the active teammate's glyph appears above your prompt:
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/statusline.js"
-  }
-}
-```
-
-(The plugin works without it — you'll still see the ASCII activation cards. The status line is just the persistent ambient touch.)
-
----
-
-## How it works
-
-### Three ways to call your team
-
-```bash
-# 1. Let the orchestrator pick the right teammate(s)
-/bullpen build me a login flow with magic links
-
-# 2. Call a specialist directly
-/backend add a /users endpoint with pagination
-/ux design a settings page
-
-# 3. Just describe what you need — natural-language hooks route automatically
-```
-
-### Cinematic activation
-
-When a teammate spins up, you see them step onto the field:
+When someone steps in, I see them — a small ASCII card prints in the terminal so I know who's at bat:
 
 ```
    ╔══════════════════════════╗
@@ -82,46 +45,61 @@ When a teammate spins up, you see them step onto the field:
    ╚══════════════════════════╝
 ```
 
-A compact status glyph (e.g., `[◇] Rune is sketching ...`) stays in your status line while they work. **Zero token cost** — all rendered locally.
+A small `[◇] Rune is sketching ...` line lives in my status line while she works. The rest of the time I forget the plugin is even there.
 
-### They actually know their stuff
+## What's actually in here
 
-Every agent has:
-- **Pinned 2025 framework defaults** (e.g., React 19.2 + Next.js 16 RSC by default, not "let me ask which version")
-- **Anti-pattern tables** with explicit "don't do this / do this" rows
-- **Verification checklists** they run before declaring done
-- **Explicit handoff conditions** to other teammates when work crosses lanes
-- **Context7 + WebSearch** wired in for current library docs
+- **64 named teammates.** Atlas leads. Rune designs. Forge writes backend. Bastion is paranoid about security. Vault is the DBA. Sprout, Ash, Wren, Skye, Lex are the interns. Sage is the coach. The full roster is in [the design doc](docs/superpowers/specs/2026-05-04-bullpen-design.md).
+- **They've got opinions.** Each one has pinned 2025 defaults (React 19.2, Postgres 17, Tailwind v4, etc.), an anti-pattern table, a verification checklist, and explicit handoff conditions. They tell you what they'd ship and what they considered.
+- **Three ways to talk to them.** `/bullpen <task>` (Atlas delegates), `/<role> <task>` (call a specific person), or just describe what you need in plain English (a hook routes the right person).
+- **They remember.** Each role has its own memory namespace. After every task, the matching intern writes down what was learned. Local JSON store by default, optional Pinecone if you want it.
+- **Sage looks out for me.** Two hours into a session she nudges me to stretch. After a bug fight, she tells me I did good. None of this costs tokens — it's all local hooks.
 
-The differentiator isn't headcount — it's that each agent makes a confident call and shows you what they considered.
+## Install
 
-### They learn from every session
-
-Per-role memory namespaces. After each task, the matching Intern logs durable learnings (decisions, patterns, preferences, snippets) so the next session benefits.
-
-```bash
-/bullpen-knowledge rune
+```
+/plugin marketplace add Manavarya09/bullpen
+/plugin install bullpen@bullpen
+/bullpen-init
 ```
 
-**Backend:** local JSON store by default (zero deps), or Pinecone via `/bullpen-pinecone`. Hybrid retrieval (BM25 + dense) and cross-encoder reranking are on the roadmap — current retrieval is good enough to be useful, honest about not yet being SOTA.
+Setup is silent. No questions. The team introduces themselves as you work.
 
-### The Coach
+Want the status-line glyph? Add this to `~/.claude/settings.json`:
 
-Sage, your team's wellness mentor, is the only AI teammate who asks if you've eaten today. Driven by local hooks (no LLM calls):
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/statusline.js"
+  }
+}
+```
 
-> *You've been at this 2 hours. Stretch, water, breath.*
-> *That auth flow was tricky. You nailed it. I'm proud of you. 🌱*
+Want better memory? `/bullpen-pinecone` swaps the local store for Pinecone.
 
----
+## A few commands worth knowing
 
-## The Roster
+```
+/bullpen-config           # see your settings
+/bullpen-knowledge rune   # see what one teammate has learned
+/bullpen-name             # rename anyone if you don't like the defaults
+/bullpen-learning on      # turn on memory writes
+/bullpen-coach on         # let Sage check in on you
+/coach                    # ask Sage directly when you need a moment
+```
 
-**64 teammates** across 15 departments — Leadership, Design, Frontend, Backend, Data, Infra, Quality, Specialty (Game/Hardware/AR-VR/Blockchain), Marketing, Sales, Operations (Finance/Legal/HR), R&D, Code Quality, Interns, and The Coach.
+## Honest notes
 
-See the full roster and design in [docs/superpowers/specs/2026-05-04-bullpen-design.md](docs/superpowers/specs/2026-05-04-bullpen-design.md).
+- **The agents are good.** I've put real work into the prompts (anti-patterns, version-pinned defaults, verification checklists, handoff rules). They make confident calls.
+- **The memory is fine, not SOTA.** It's per-role vector retrieval today. Hybrid retrieval (BM25 + dense) and cross-encoder rerank are on the list.
+- **It's macOS / Linux.** Should work on WSL. Probably not Windows native — the hooks shell out.
+- **Requires Node 18+.** Already required by Claude Code, so you have it.
 
----
+## Contributing
+
+If you use this and have ideas — new teammates, sharper anti-patterns, better personas — open a PR. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the structure.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT.
