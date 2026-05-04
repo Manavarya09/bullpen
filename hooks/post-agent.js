@@ -80,6 +80,24 @@ function writeConfig(cfg) {
   } catch {}
 }
 
+function extractLearningText(payload) {
+  // Tool response shape varies. Walk common paths to find a text body.
+  const candidates = [
+    payload?.tool_response?.content?.[0]?.text,
+    payload?.tool_response?.text,
+    payload?.tool_response?.output,
+    payload?.tool_response?.result,
+    typeof payload?.tool_response === 'string' ? payload.tool_response : null,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim().length > 50) {
+      // Truncate to a manageable size for the snippet record
+      return c.trim().slice(0, 1500);
+    }
+  }
+  return null;
+}
+
 function maybePrintNudge(cfg) {
   if (!cfg) return;
   const taskCount = cfg.task_count || 0;
@@ -114,9 +132,10 @@ async function main() {
   } catch {}
 
   const now = Math.floor(Date.now() / 1000);
-  let status = 'unknown';
+  let status = 'ok';
   const isError = payload?.tool_response?.is_error;
   if (typeof isError === 'boolean') status = isError ? 'error' : 'ok';
+  else if (payload?.tool_response === undefined) status = 'unknown';
 
   // Wellness ledger (last 20 lines)
   try {
@@ -128,12 +147,31 @@ async function main() {
     fs.writeFileSync(COACH_FILE, prev.slice(-20).join('\n') + '\n');
   } catch {}
 
-  // Enqueue learning extraction (only if learning is enabled in config)
+  // Memory write: store the task as a snippet record so future runs of
+  // the same agent can recall this work via bullpen-memory.
   const cfg = readConfig();
-  if (agentId && cfg?.learning === 'on') {
+  if (agentId && status === 'ok' && cfg?.learning === 'on') {
     try {
       fs.appendFileSync(LEARN_QUEUE, `${agentId}|${now}|${status}\n`);
-    } catch {}
+      const text = extractLearningText(payload);
+      if (text) {
+        const ROOT = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, '..');
+        const { upsert } = require(path.join(ROOT, 'scripts', 'memory.js'));
+        const record = {
+          id: `${agentId}-${now}-${Math.random().toString(36).slice(2, 8)}`,
+          text,
+          type: 'snippet',
+          agent_role: agentId,
+          project_path: process.cwd(),
+          created_at: new Date(now * 1000).toISOString(),
+          session_id: state.started_at || String(now),
+          ref_files: '',
+        };
+        await upsert(agentId, record);
+      }
+    } catch {
+      // never fail the user over a memory write
+    }
   }
 
   // Increment task counter and print contextual nudge

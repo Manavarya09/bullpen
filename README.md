@@ -1,5 +1,7 @@
 <div align="center">
 
+<!-- Banner: drop assets/banner.png here. Prompt for generating it lives in docs/banner-prompt.md -->
+
 # bullpen
 
 **Your deep bench of 64 AI specialists. Warming up to step in on demand.**

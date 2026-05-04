@@ -60,10 +60,47 @@ async function main() {
   const agent = roster.agents.find((a) => a.id === agentId);
   if (!agent) process.exit(0);
 
-  // Honor persona preference
+  // Honor persona preference + per-user persona overrides
   const cfg = safeReadJson(CONFIG_FILE) || {};
   const personasOff = cfg.personas === 'off';
-  const displayName = personasOff ? agent.role : agent.name;
+  const overrideName = cfg.persona_names?.[agent.id];
+  const displayName = personasOff ? agent.role : (overrideName || agent.name);
+
+  // Memory loop: query relevant past learnings and write to a context file
+  // the agent will Read at the start of the task. Off unless config.learning === 'on'.
+  if (cfg.learning === 'on') {
+    try {
+      const taskQuery =
+        payload?.tool_input?.prompt ||
+        payload?.tool_input?.description ||
+        payload?.tool_input?.task ||
+        '';
+      if (taskQuery) {
+        const { search } = require(path.join(ROOT, 'scripts', 'memory.js'));
+        const projectPath = process.cwd();
+        const memories = await search(agent.id, taskQuery, 5);
+        const ctxPath = path.join(os.tmpdir(), `bullpen-memory-${agent.id}.md`);
+        if (memories?.length) {
+          const lines = memories
+            .filter((m) => !m.project_path || m.project_path === projectPath || m.agent_role === agent.id)
+            .slice(0, 5)
+            .map((m) => `- [${m.type || 'note'}] ${m.text} (${m.created_at || 'unknown'})`);
+          if (lines.length) {
+            fs.writeFileSync(
+              ctxPath,
+              `# Past learnings for ${agent.name} (${agent.role})\n\nRelevant context from past sessions:\n\n${lines.join('\n')}\n`
+            );
+          } else {
+            fs.writeFileSync(ctxPath, '');
+          }
+        } else {
+          fs.writeFileSync(ctxPath, '');
+        }
+      }
+    } catch {
+      // never fail the agent over memory issues
+    }
+  }
 
   const action = `${agent.verb || 'working'}…`;
 
