@@ -6,79 +6,141 @@
     </linearGradient>
   </defs>
 
-  <!-- Outer rounded window -->
+  <!-- Window -->
   <rect width="1280" height="900" rx="14" fill="url(#bg)"/>
 
   <!-- Title bar -->
   <rect width="1280" height="42" rx="14" fill="#13141b"/>
   <rect y="28" width="1280" height="14" fill="#13141b"/>
-
-  <!-- Traffic lights -->
   <circle cx="28" cy="21" r="7" fill="#ff5f56"/>
   <circle cx="52" cy="21" r="7" fill="#ffbd2e"/>
   <circle cx="76" cy="21" r="7" fill="#27c93f"/>
+  <text x="640" y="27" text-anchor="middle"
+        font-family="-apple-system, system-ui, 'Segoe UI', sans-serif"
+        font-size="13" fill="#7d7e8c" font-weight="500">~ bullpen — claude code</text>
 
-  <!-- Title -->
-  <text x="640" y="27" text-anchor="middle" font-family="-apple-system, system-ui, 'Segoe UI', sans-serif" font-size="13" fill="#7d7e8c" font-weight="500">~ bullpen — claude code</text>
-
-  <!-- Terminal content -->
-  <g font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="17">
-
-    <!-- Prompt -->
+  <!-- Prompt -->
+  <g font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace" font-size="17">
     <text x="40" y="100">
-      <tspan fill="#7aa2f7" font-weight="600">❯</tspan>
-      <tspan fill="#c0caf5"> /bullpen:ui design a settings page with breathing room</tspan>
+      <tspan fill="#7aa2f7" font-weight="700">❯</tspan>
+      <tspan fill="#c0caf5" xml:space="preserve">  /bullpen:ui design a settings page with breathing room</tspan>
+    </text>
+  </g>
+
+  <!-- ─── ACTIVATION CARD (SVG-drawn so it renders identically everywhere) ─── -->
+  <g transform="translate(48, 144)">
+    <!-- Card border -->
+    <rect width="380" height="132" rx="6" fill="#1f2030" stroke="#414868" stroke-width="1.5"/>
+
+    <!-- Pixel-art face (8x5 grid, 8px cells) -->
+    <g transform="translate(20, 24)" shape-rendering="crispEdges">
+      <!-- Top row -->
+      <rect x="8"  y="0"  width="8" height="8" fill="#7dcfff"/>
+      <rect x="16" y="0"  width="8" height="8" fill="#7dcfff"/>
+      <rect x="24" y="0"  width="8" height="8" fill="#7dcfff"/>
+      <rect x="32" y="0"  width="8" height="8" fill="#7dcfff"/>
+      <rect x="40" y="0"  width="8" height="8" fill="#7dcfff"/>
+      <rect x="48" y="0"  width="8" height="8" fill="#7dcfff"/>
+
+      <!-- Eye row -->
+      <rect x="0"  y="8"  width="8" height="8" fill="#7dcfff"/>
+      <rect x="8"  y="8"  width="8" height="8" fill="#1f2030"/>
+      <rect x="16" y="8"  width="8" height="8" fill="#c0caf5"/>
+      <rect x="24" y="8"  width="8" height="8" fill="#1f2030"/>
+      <rect x="32" y="8"  width="8" height="8" fill="#c0caf5"/>
+      <rect x="40" y="8"  width="8" height="8" fill="#1f2030"/>
+      <rect x="48" y="8"  width="8" height="8" fill="#1f2030"/>
+      <rect x="56" y="8"  width="8" height="8" fill="#7dcfff"/>
+
+      <!-- Mid row -->
+      <rect x="0"  y="16" width="8" height="8" fill="#7dcfff"/>
+      <rect x="8"  y="16" width="8" height="8" fill="#1f2030"/>
+      <rect x="16" y="16" width="8" height="8" fill="#1f2030"/>
+      <rect x="24" y="16" width="8" height="8" fill="#1f2030"/>
+      <rect x="32" y="16" width="8" height="8" fill="#1f2030"/>
+      <rect x="40" y="16" width="8" height="8" fill="#1f2030"/>
+      <rect x="48" y="16" width="8" height="8" fill="#1f2030"/>
+      <rect x="56" y="16" width="8" height="8" fill="#7dcfff"/>
+
+      <!-- Mouth row -->
+      <rect x="0"  y="24" width="8" height="8" fill="#7dcfff"/>
+      <rect x="8"  y="24" width="8" height="8" fill="#1f2030"/>
+      <rect x="16" y="24" width="8" height="8" fill="#1f2030"/>
+      <rect x="24" y="24" width="8" height="8" fill="#bb9af7"/>
+      <rect x="32" y="24" width="8" height="8" fill="#bb9af7"/>
+      <rect x="40" y="24" width="8" height="8" fill="#1f2030"/>
+      <rect x="48" y="24" width="8" height="8" fill="#1f2030"/>
+      <rect x="56" y="24" width="8" height="8" fill="#7dcfff"/>
+
+      <!-- Bottom row -->
+      <rect x="8"  y="32" width="8" height="8" fill="#7dcfff"/>
+      <rect x="16" y="32" width="8" height="8" fill="#7dcfff"/>
+      <rect x="24" y="32" width="8" height="8" fill="#7dcfff"/>
+      <rect x="32" y="32" width="8" height="8" fill="#7dcfff"/>
+      <rect x="40" y="32" width="8" height="8" fill="#7dcfff"/>
+      <rect x="48" y="32" width="8" height="8" fill="#7dcfff"/>
+    </g>
+
+    <!-- Persona text -->
+    <text x="120" y="42" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, monospace"
+          font-size="22" font-weight="700" fill="#bb9af7">Rune</text>
+    <text x="120" y="68" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, monospace"
+          font-size="14" fill="#7dcfff" letter-spacing="1">UI Designer</text>
+
+    <!-- Activity line -->
+    <text x="20" y="115" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, monospace"
+          font-size="14" fill="#9ece6a">▸ sketching…</text>
+  </g>
+
+  <!-- Response -->
+  <g font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace" font-size="17">
+    <text x="40" y="328" fill="#bb9af7" font-weight="700">Rune here.</text>
+
+    <text x="40" y="364" fill="#c0caf5">Pulled up the settings page. Spacing's tight on mobile — form fields</text>
+    <text x="40" y="388" fill="#c0caf5">are 8px apart and labels are crammed against inputs. A few directions:</text>
+
+    <text x="40" y="436">
+      <tspan fill="#e0af68" font-weight="700">1)</tspan>
+      <tspan fill="#c0caf5"> Breathe at the form level — bump field gap to 24px, label margin</tspan>
+    </text>
+    <text x="40" y="460" fill="#c0caf5" xml:space="preserve">    to 8px. Mobile-first, desktop reads the same.</text>
+
+    <text x="40" y="500">
+      <tspan fill="#e0af68" font-weight="700">2)</tspan>
+      <tspan fill="#c0caf5"> Group into 3 cards: Account / Notifications / Billing. Each card has</tspan>
+    </text>
+    <text x="40" y="524" fill="#c0caf5" xml:space="preserve">    its own internal rhythm. Visual rest comes for free.</text>
+
+    <text x="40" y="564">
+      <tspan fill="#e0af68" font-weight="700">3)</tspan>
+      <tspan fill="#c0caf5"> Sticky save bar at the bottom. Kills the "did I lose changes" anxiety.</tspan>
     </text>
 
-    <!-- Activation card -->
-    <text x="40" y="160" fill="#565f89">   ╔══════════════════════════╗</text>
-    <text x="40" y="184" fill="#565f89">   ║   <tspan fill="#c0caf5">▄▀▀▀▀▄</tspan>                 ║</text>
-    <text x="40" y="208" fill="#565f89">   ║   <tspan fill="#c0caf5">█ ◉ ◉ █</tspan>   <tspan fill="#bb9af7" font-weight="600">Rune</tspan>         ║</text>
-    <text x="40" y="232" fill="#565f89">   ║   <tspan fill="#c0caf5">▀▄▄▄▄▀</tspan>   <tspan fill="#7dcfff">UI Designer</tspan>   ║</text>
-    <text x="40" y="256" fill="#565f89">   ║   <tspan fill="#9ece6a">sketching…</tspan>             ║</text>
-    <text x="40" y="280" fill="#565f89">   ╚══════════════════════════╝</text>
-
-    <!-- Response -->
-    <text x="40" y="340" fill="#bb9af7" font-weight="600">Rune here.</text>
-
-    <text x="40" y="372" fill="#c0caf5">Pulled up the settings page. Spacing's tight on mobile — form fields</text>
-    <text x="40" y="396" fill="#c0caf5">are 8px apart and labels are crammed against inputs. A few directions:</text>
-
-    <text x="40" y="446"><tspan fill="#e0af68" font-weight="600">1)</tspan> <tspan fill="#c0caf5">Breathe at the form level — bump field gap to 24px, label margin</tspan></text>
-    <text x="40" y="470" fill="#c0caf5">    to 8px. Mobile-first, desktop reads the same.</text>
-
-    <text x="40" y="510"><tspan fill="#e0af68" font-weight="600">2)</tspan> <tspan fill="#c0caf5">Group into 3 cards: Account / Notifications / Billing. Each card has</tspan></text>
-    <text x="40" y="534" fill="#c0caf5">    its own internal rhythm. Visual rest comes for free.</text>
-
-    <text x="40" y="574"><tspan fill="#e0af68" font-weight="600">3)</tspan> <tspan fill="#c0caf5">Sticky save bar at the bottom. Kills the "did I lose changes" anxiety.</tspan></text>
-
-    <!-- Recommendation -->
-    <text x="40" y="638">
-      <tspan fill="#9ece6a" font-weight="600">⭐ My pick:</tspan>
+    <text x="40" y="624">
+      <tspan fill="#e0af68" font-size="20">★</tspan>
+      <tspan fill="#9ece6a" font-weight="700"> My pick:</tspan>
       <tspan fill="#c0caf5"> 2 — cards give natural grouping + visual rest. The breathing</tspan>
     </text>
-    <text x="40" y="662" fill="#c0caf5">   comes free once the cards are in place. Want me to draft the JSX?</text>
+    <text x="40" y="648" fill="#c0caf5" xml:space="preserve">   comes free once the cards are in place. Want me to draft the JSX?</text>
 
     <!-- Divider -->
-    <text x="40" y="730" fill="#2a2f3e">────────────────────────────────────────────────────────</text>
+    <line x1="40" y1="715" x2="600" y2="715" stroke="#2a2f3e" stroke-width="1"/>
 
     <!-- New prompt -->
-    <text x="40" y="775">
-      <tspan fill="#7aa2f7" font-weight="600">❯</tspan>
-      <tspan fill="#565f89"> _</tspan>
+    <text x="40" y="765">
+      <tspan fill="#7aa2f7" font-weight="700">❯</tspan>
+      <tspan fill="#565f89" xml:space="preserve">  _</tspan>
     </text>
-
   </g>
 
   <!-- Status line -->
   <rect y="850" width="1280" height="50" fill="#13141b"/>
   <text x="40" y="880" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, monospace" font-size="14">
-    <tspan fill="#7dcfff">[◇]</tspan>
+    <tspan fill="#7dcfff" font-weight="700">[◇]</tspan>
     <tspan fill="#c0caf5"> Rune</tspan>
     <tspan fill="#565f89"> (UI Designer)</tspan>
     <tspan fill="#c0caf5"> is</tspan>
     <tspan fill="#9ece6a"> sketching</tspan>
-    <tspan fill="#565f89"> .  .  .</tspan>
+    <tspan fill="#565f89" xml:space="preserve">  .  .  .</tspan>
   </text>
-
 </svg>
