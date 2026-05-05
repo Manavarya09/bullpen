@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" role="img" aria-label="bullpen terminal screenshot">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1b26"/>
+      <stop offset="100%" stop-color="#16171f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer rounded window -->
+  <rect width="1280" height="900" rx="14" fill="url(#bg)"/>
+
+  <!-- Title bar -->
+  <rect width="1280" height="42" rx="14" fill="#13141b"/>
+  <rect y="28" width="1280" height="14" fill="#13141b"/>
+
+  <!-- Traffic lights -->
+  <circle cx="28" cy="21" r="7" fill="#ff5f56"/>
+  <circle cx="52" cy="21" r="7" fill="#ffbd2e"/>
+  <circle cx="76" cy="21" r="7" fill="#27c93f"/>
+
+  <!-- Title -->
+  <text x="640" y="27" text-anchor="middle" font-family="-apple-system, system-ui, 'Segoe UI', sans-serif" font-size="13" fill="#7d7e8c" font-weight="500">~ bullpen — claude code</text>
+
+  <!-- Terminal content -->
+  <g font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="17">
+
+    <!-- Prompt -->
+    <text x="40" y="100">
+      <tspan fill="#7aa2f7" font-weight="600">❯</tspan>
+      <tspan fill="#c0caf5"> /bullpen:ui design a settings page with breathing room</tspan>
+    </text>
+
+    <!-- Activation card -->
+    <text x="40" y="160" fill="#565f89">   ╔══════════════════════════╗</text>
+    <text x="40" y="184" fill="#565f89">   ║   <tspan fill="#c0caf5">▄▀▀▀▀▄</tspan>                 ║</text>
+    <text x="40" y="208" fill="#565f89">   ║   <tspan fill="#c0caf5">█ ◉ ◉ █</tspan>   <tspan fill="#bb9af7" font-weight="600">Rune</tspan>         ║</text>
+    <text x="40" y="232" fill="#565f89">   ║   <tspan fill="#c0caf5">▀▄▄▄▄▀</tspan>   <tspan fill="#7dcfff">UI Designer</tspan>   ║</text>
+    <text x="40" y="256" fill="#565f89">   ║   <tspan fill="#9ece6a">sketching…</tspan>             ║</text>
+    <text x="40" y="280" fill="#565f89">   ╚══════════════════════════╝</text>
+
+    <!-- Response -->
+    <text x="40" y="340" fill="#bb9af7" font-weight="600">Rune here.</text>
+
+    <text x="40" y="372" fill="#c0caf5">Pulled up the settings page. Spacing's tight on mobile — form fields</text>
+    <text x="40" y="396" fill="#c0caf5">are 8px apart and labels are crammed against inputs. A few directions:</text>
+
+    <text x="40" y="446"><tspan fill="#e0af68" font-weight="600">1)</tspan> <tspan fill="#c0caf5">Breathe at the form level — bump field gap to 24px, label margin</tspan></text>
+    <text x="40" y="470" fill="#c0caf5">    to 8px. Mobile-first, desktop reads the same.</text>
+
+    <text x="40" y="510"><tspan fill="#e0af68" font-weight="600">2)</tspan> <tspan fill="#c0caf5">Group into 3 cards: Account / Notifications / Billing. Each card has</tspan></text>
+    <text x="40" y="534" fill="#c0caf5">    its own internal rhythm. Visual rest comes for free.</text>
+
+    <text x="40" y="574"><tspan fill="#e0af68" font-weight="600">3)</tspan> <tspan fill="#c0caf5">Sticky save bar at the bottom. Kills the "did I lose changes" anxiety.</tspan></text>
+
+    <!-- Recommendation -->
+    <text x="40" y="638">
+      <tspan fill="#9ece6a" font-weight="600">⭐ My pick:</tspan>
+      <tspan fill="#c0caf5"> 2 — cards give natural grouping + visual rest. The breathing</tspan>
+    </text>
+    <text x="40" y="662" fill="#c0caf5">   comes free once the cards are in place. Want me to draft the JSX?</text>
+
+    <!-- Divider -->
+    <text x="40" y="730" fill="#2a2f3e">────────────────────────────────────────────────────────</text>
+
+    <!-- New prompt -->
+    <text x="40" y="775">
+      <tspan fill="#7aa2f7" font-weight="600">❯</tspan>
+      <tspan fill="#565f89"> _</tspan>
+    </text>
+
+  </g>
+
+  <!-- Status line -->
+  <rect y="850" width="1280" height="50" fill="#13141b"/>
+  <text x="40" y="880" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, monospace" font-size="14">
+    <tspan fill="#7dcfff">[◇]</tspan>
+    <tspan fill="#c0caf5"> Rune</tspan>
+    <tspan fill="#565f89"> (UI Designer)</tspan>
+    <tspan fill="#c0caf5"> is</tspan>
+    <tspan fill="#9ece6a"> sketching</tspan>
+    <tspan fill="#565f89"> .  .  .</tspan>
+  </text>
+
+</svg>
