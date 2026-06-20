@@ -111,9 +111,9 @@ async function search(namespace, query, topK = 5) {
   const qt = tokenize(query);
   return records
     .map((r) => ({ record: r, score: score(qt, r._tokens || tokenize(r.text)) }))
+    .filter((m) => m.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK)
-    .filter((m) => m.score > 0)
     .map((m) => {
       const { _tokens, ...clean } = m.record;
       return { ...clean, _score: Number(m.score.toFixed(4)) };
