@@ -98,6 +98,4 @@ Want the status-line glyph? Add this to `~/.claude/settings.json`:
 
 If you use this and have ideas — new teammates, sharper anti-patterns, better personas — open a PR. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the structure.
 
-## License
 
-MIT.
